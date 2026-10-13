@@ -54,10 +54,9 @@ public class HMMBiomeTrainer {
         );
         synchronized (seq) {
             seq.add(ore);
-            // 🔥 限制長度，避免越跑越慢
-            if (seq.size() > 200) {
-                seq.remove(0);
-            }
+//            if (seq.size() > 200) {
+//                seq.remove(0);
+//            }
         }
     }
 
@@ -69,12 +68,14 @@ public class HMMBiomeTrainer {
 
         if (total == lastTotalOres) return;
 
-        // 🔥 如果已經在訓練，跳過
-        if (!training.compareAndSet(false, true)) return;
+        if (!training.compareAndSet(false, true)) {
+            System.out.println("[HMMBiomeTrainer] ⏳ 上一次訓練還沒結束，跳過");
+            return;
+        }
 
         lastTotalOres = total;
+        System.out.println("[HMMBiomeTrainer] 🏋️ 開始訓練，總礦物數: " + total);
 
-        // 🔥 複製資料，避免訓練時被修改
         List<int[]> sequences = new ArrayList<>();
         for (List<Integer> seq : playerSequences.values()) {
             int[] arr;
@@ -87,19 +88,22 @@ public class HMMBiomeTrainer {
         }
 
         if (sequences.isEmpty()) {
+            System.out.println("[HMMBiomeTrainer] ⚠️ 沒有足夠長的序列，跳過訓練");
             training.set(false);
             return;
         }
 
-        // 🔥 丟到背景執行緒
         Thread t = new Thread(() -> {
             try {
+                long start = System.currentTimeMillis();
                 HMM newHmm = new HMM(3, ORE_TO_ID.size());
                 newHmm.train(sequences, 20, 1e-4);
-                hmm = newHmm;  // 原子替換
-                System.out.println("[HMMBiomeTrainer] 訓練完成（背景）");
+                hmm = newHmm;
+                long cost = System.currentTimeMillis() - start;
+                System.out.println("[HMMBiomeTrainer] ✅ 訓練完成，序列數: " + sequences.size() + "，耗時 " + cost + "ms");
             } catch (Exception e) {
-                System.err.println("[HMMBiomeTrainer] 訓練失敗: " + e.getMessage());
+                System.err.println("[HMMBiomeTrainer] ❌ 訓練失敗: " + e.getMessage());
+                e.printStackTrace();
             } finally {
                 training.set(false);
             }
@@ -115,28 +119,50 @@ public class HMMBiomeTrainer {
         for (String b : BIOMES) raw.put(b, 0.0);
 
         HMM currentHmm = hmm;
-        if (currentHmm != null) {
-            List<Integer> seq = playerSequences.get(uuid);
-            if (seq != null) {
-                int[] arr;
-                synchronized (seq) {
-                    if (seq.isEmpty()) return smoothedSnapshot();
-                    arr = new int[seq.size()];
-                    for (int i = 0; i < seq.size(); i++) arr[i] = seq.get(i);
-                }
+        if (currentHmm == null) {
+            return smoothedSnapshot();
+        }
 
-                double[] probs = currentHmm.currentStateProbs(arr);
-                int[] mapping = mapStatesToBiomes(currentHmm);
-                for (int s = 0; s < 3; s++) {
-                    String biome = BIOMES.get(mapping[s]);
-                    raw.merge(biome, probs[s], Double::sum);
-                }
+        List<Integer> seq = playerSequences.get(uuid);
+        if (seq == null || seq.isEmpty()) {
+            // 🔥 沒有序列，直接回傳上次的 smoothed，不要更新
+            return smoothedSnapshot();
+        }
+
+        int[] arr;
+        synchronized (seq) {
+            arr = new int[seq.size()];
+            for (int i = 0; i < seq.size(); i++) arr[i] = seq.get(i);
+        }
+
+        double[] probs = currentHmm.currentStateProbs(arr);
+        int[] mapping = mapStatesToBiomes(currentHmm);
+
+        for (int s = 0; s < 3; s++) {
+            String biome = BIOMES.get(mapping[s]);
+            double p = probs[s];
+            if (Double.isNaN(p) || Double.isInfinite(p)) p = 0.0;
+            raw.merge(biome, p, Double::sum);
+        }
+
+        // 正規化，避免總和不是 1
+        double total = raw.values().stream().mapToDouble(Double::doubleValue).sum();
+        if (total > 0) {
+            for (String k : raw.keySet()) {
+                raw.put(k, raw.get(k) / total);
+            }
+        } else {
+            // 全 0，回傳均勻分布
+            for (String k : raw.keySet()) {
+                raw.put(k, 1.0 / BIOMES.size());
             }
         }
 
         for (String k : raw.keySet()) {
             double old = smoothed.getOrDefault(k, 0.0);
             double now = raw.getOrDefault(k, 0.0);
+            if (Double.isNaN(now) || Double.isInfinite(now)) now = 0.0;
+            if (Double.isNaN(old) || Double.isInfinite(old)) old = 0.0;
             smoothed.put(k, old * (1 - ALPHA) + now * ALPHA);
         }
 
@@ -146,7 +172,9 @@ public class HMMBiomeTrainer {
     private static Map<String, Double> smoothedSnapshot() {
         Map<String, Double> snapshot = new HashMap<>();
         for (String b : BIOMES) {
-            snapshot.put(b, smoothed.getOrDefault(b, 0.0));
+            double v = smoothed.getOrDefault(b, 0.0);
+            if (Double.isNaN(v) || Double.isInfinite(v)) v = 0.0;
+            snapshot.put(b, v);
         }
         return snapshot;
     }
@@ -168,7 +196,9 @@ public class HMMBiomeTrainer {
                 if (used[s]) continue;
                 double score = 0;
                 for (int ore : biomeOres[biome]) {
-                    score += B[s][ore];
+                    double p = B[s][ore];
+                    if (Double.isNaN(p) || Double.isInfinite(p)) p = 0.0;
+                    score += p;
                 }
                 if (score > bestScore) {
                     bestScore = score;
@@ -181,6 +211,18 @@ public class HMMBiomeTrainer {
         }
 
         return mapping;
+    }
+
+    public static String getStatus() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("hmm=").append(hmm != null ? "ok" : "null");
+        sb.append(", training=").append(training.get());
+        sb.append(", lastTotalOres=").append(lastTotalOres);
+        sb.append(", players=").append(playerSequences.size());
+        int total = playerSequences.values().stream().mapToInt(List::size).sum();
+        sb.append(", totalOres=").append(total);
+        sb.append(", smoothed=").append(smoothed);
+        return sb.toString();
     }
 
     public static void clear() {

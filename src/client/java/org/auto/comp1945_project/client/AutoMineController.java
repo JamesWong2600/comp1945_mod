@@ -40,7 +40,12 @@ public class AutoMineController extends ServerPlayerEntity {
     private static int tickCounter = 0;
     private static boolean enabled = true;
     private static BlockPos currentTarget = null;
-
+    private static int wanderTicks = 0;
+    private static Vec3d wanderDir = null;
+    private static final int WANDER_MIN = 40;   // 最少走 2 秒
+    private static final int WANDER_MAX = 100;  // 最多走 5 秒
+    private static final double WANDER_STEP = 0.4;
+    private static final double WANDER_SPEED = 0.4;
 
     // ==================== 建構子 ====================
 
@@ -62,6 +67,7 @@ public class AutoMineController extends ServerPlayerEntity {
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            // 1. 記錄 ans_key_data
             for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                 if (player.getWorld() instanceof ServerWorld world) {
                     MiningRecordManager.tickAnsKey(world, player.getX(), player.getY(), player.getZ());
@@ -76,11 +82,13 @@ public class AutoMineController extends ServerPlayerEntity {
 
             ServerWorld world = fake.getServerWorld();
 
-            if (currentTarget == null || world.getBlockState(currentTarget).isAir()) {
-                currentTarget = OreFinder.findNearestOre(world, fake.getPos(), radius);
+            // 如果目標被挖掉了，清掉
+            if (currentTarget != null && world.getBlockState(currentTarget).isAir()) {
+                currentTarget = null;
             }
 
             if (currentTarget != null) {
+                // 有目標：走過去挖
                 double dist = fake.getPos().distanceTo(Vec3d.ofCenter(currentTarget));
                 if (dist > 4.0) {
                     fake.moveTowards(currentTarget);
@@ -88,9 +96,42 @@ public class AutoMineController extends ServerPlayerEntity {
                     fake.breakBlockAt(currentTarget);
                     currentTarget = null;
                 }
+            } else {
+                // 沒有目標：隨機漫遊
+                if (wanderTicks <= 0 || wanderDir == null) {
+                    double angle = Math.random() * Math.PI * 2;
+                    wanderDir = new Vec3d(Math.cos(angle), 0, Math.sin(angle)).normalize();
+                    wanderTicks = WANDER_MIN + (int)(Math.random() * (WANDER_MAX - WANDER_MIN));
+                }
+
+                Vec3d current = fake.getPos();
+                Vec3d next = current.add(wanderDir.multiply(WANDER_STEP));
+
+                // 檢查前方是不是空氣，避免穿牆
+                BlockPos check = BlockPos.ofFloored(next.x, next.y, next.z);
+                if (world.getBlockState(check).isAir()
+                        && world.getBlockState(check.up()).isAir()) {
+                    fake.setPosition(next.x, next.y, next.z);
+                    fake.refreshPositionAfterTeleport(next.x, next.y, next.z);
+                    fake.lookAtOre(BlockPos.ofFloored(next));
+                } else {
+                    // 撞牆就換方向
+                    wanderDir = null;
+                    wanderTicks = 0;
+                }
+
+                wanderTicks--;
+
+                // 邊走邊找礦（半徑 8）
+                BlockPos ore = OreFinder.findNearestOre(world, fake.getPos(), 8);
+                if (ore != null) {
+                    currentTarget = ore;
+                    wanderDir = null;
+                    wanderTicks = 0;
+                }
             }
 
-            // 🔥 更新假玩家的座標 / biome / tick
+            // 3. 更新 HUD 狀態
             BlockPos pos = fake.getBlockPos();
             String coordStr = pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
             String biomeStr = world.getBiome(pos).getKey()
@@ -99,12 +140,12 @@ public class AutoMineController extends ServerPlayerEntity {
             long tick = world.getTime();
             BiomeGuessHUD.updateStatus(coordStr, biomeStr, tick);
 
-            // 🔥 每 100 tick 訓練一次
-            if (server.getTicks() % 100 == 0) {
+            // 4. 每 200 tick 非同步訓練一次
+            if (server.getTicks() % 200 == 0) {
                 HMMBiomeTrainer.trainAsync();
             }
 
-            // 🔥 更新預測
+            // 5. 更新預測
             Map<String, Double> probs = HMMBiomeTrainer.predict(fake.getUuid());
             BiomeGuessHUD.updatePredictions(probs);
         });
