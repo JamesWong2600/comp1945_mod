@@ -58,10 +58,6 @@ public class AutoMineController extends ServerPlayerEntity {
             AutoMineController player = getFakePlayer();
             if (player == null) return;
 
-            tickCounter++;
-            if (tickCounter < 5) return; // 每 0.25 秒執行一次，動作更滑順
-            tickCounter = 0;
-
             ServerWorld world = player.getServerWorld();
             BlockPos ore = OreFinder.findNearestOre(world, player.getPos(), radius);
             if (ore != null) {
@@ -159,6 +155,9 @@ public class AutoMineController extends ServerPlayerEntity {
         npc.setInvulnerable(true);
         npc.setInvisible(false);
         npc.setSilent(true);
+
+        // 🛑 關閉重力，避免假玩家受重力影響往下掉
+        npc.setNoGravity(true);
 
         npc.getDataTracker().set(
                 net.minecraft.entity.player.PlayerEntity.PLAYER_MODEL_PARTS,
