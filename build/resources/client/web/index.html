@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+<canvas id="chart" width="800" height="300"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <head>
     <meta charset="UTF-8">
     <title>Biome Predictor</title>
@@ -11,10 +13,10 @@
 <div id="bars"></div>
 
 <div class="info">
-    <div>座標: <span id="coord">-</span></div>
-    <div>當前方塊: <span id="block">-</span></div>
-    <div>當前 Tick: <span id="tick">-</span></div>
-    <div>當前 Biome: <span id="biome">-</span></div>
+    <div>Current Corrdinate: <span id="coord">-</span></div>
+    <div>Current Destroyed Block: <span id="block">-</span></div>
+    <div>Current Tick: <span id="tick">-</span></div>
+    <div>Current AREA: <span id="biome">-</span></div>
 </div>
 
 <script src="/script.js"></script>

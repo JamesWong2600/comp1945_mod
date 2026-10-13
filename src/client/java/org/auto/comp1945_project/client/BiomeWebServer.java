@@ -1,6 +1,5 @@
 package org.auto.comp1945_project.client;
 
-
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -9,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -22,6 +22,7 @@ public class BiomeWebServer {
             server = HttpServer.create(new InetSocketAddress(PORT), 0);
             server.createContext("/", BiomeWebServer::handleStatic);
             server.createContext("/data", BiomeWebServer::handleData);
+            server.createContext("/history", BiomeWebServer::handleHistory);  // 🔥 新增
             server.setExecutor(Executors.newFixedThreadPool(2));
             server.start();
             System.out.println("[BiomeWebServer] ✅ http://localhost:" + PORT);
@@ -84,7 +85,9 @@ public class BiomeWebServer {
         boolean first = true;
         for (Map.Entry<String, Double> e : probs.entrySet()) {
             if (!first) json.append(",");
-            json.append("\"").append(e.getKey()).append("\":").append(e.getValue());
+            double v = e.getValue();
+            if (Double.isNaN(v) || Double.isInfinite(v)) v = 0.0;
+            json.append("\"").append(e.getKey()).append("\":").append(v);
             first = false;
         }
         json.append("},");
@@ -101,6 +104,37 @@ public class BiomeWebServer {
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);
         }
+    }
+
+    // ==================== /history ====================
+
+    private static void handleHistory(HttpExchange exchange) throws IOException {
+        List<BiomeHistory.HistoryEntry> history = BiomeHistory.getHistory();
+
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < history.size(); i++) {
+            if (i > 0) json.append(",");
+            BiomeHistory.HistoryEntry e = history.get(i);
+            json.append("{\"tick\":").append(e.tick)
+                    .append(",\"red\":").append(safe(e.red))
+                    .append(",\"blue\":").append(safe(e.blue))
+                    .append(",\"yellow\":").append(safe(e.yellow))
+                    .append("}");
+        }
+        json.append("]");
+
+        byte[] bytes = json.toString().getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().add("Content-Type", "application/json; charset=utf-8");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        exchange.sendResponseHeaders(200, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
+    }
+
+    private static double safe(double v) {
+        if (Double.isNaN(v) || Double.isInfinite(v)) return 0.0;
+        return v;
     }
 
     private static String escape(String s) {

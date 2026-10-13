@@ -52,5 +52,35 @@ async function update() {
     }
 }
 
+const ctx = document.getElementById('chart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [
+            { label: 'Red', borderColor: 'red', data: [], fill: false },
+            { label: 'Blue', borderColor: 'blue', data: [], fill: false },
+            { label: 'Yellow', borderColor: 'gold', data: [], fill: false }
+        ]
+    },
+    options: {
+        animation: false,
+        scales: { y: { min: 0, max: 1 } }
+    }
+});
+
+async function updateChart() {
+    const res = await fetch('/history');
+    const history = await res.json();
+    chart.data.labels = history.map(h => h.tick);
+    chart.data.datasets[0].data = history.map(h => h.red);
+    chart.data.datasets[1].data = history.map(h => h.blue);
+    chart.data.datasets[2].data = history.map(h => h.yellow);
+    chart.update();
+}
+
+
+setInterval(updateChart, 1000);
+
 update();
 setInterval(update, 1000);

@@ -148,6 +148,7 @@ public class AutoMineController extends ServerPlayerEntity {
             // 5. 更新預測
             Map<String, Double> probs = HMMBiomeTrainer.predict(fake.getUuid());
             BiomeGuessHUD.updatePredictions(probs);
+            BiomeHistory.add(tick, probs);
         });
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {

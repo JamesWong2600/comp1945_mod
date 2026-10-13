@@ -8393,6 +8393,10 @@ c	net/minecraft/util/math/BlockPos$Mutable	ji$a	net/minecraft/class_2338$class_2
 	m	(I)Lnet/minecraft/util/math/BlockPos$Mutable;	setX	p	method_33097
 	m	(I)Lnet/minecraft/util/math/BlockPos$Mutable;	setY	q	method_33098
 	m	(I)Lnet/minecraft/util/math/BlockPos$Mutable;	setZ	r	method_33099
+	m	(Lnet/minecraft/util/math/Direction;I)Lnet/minecraft/util/math/BlockPos;	offset	method_10079	method_10079
+	m	(III)Lnet/minecraft/util/math/BlockPos;	add	method_10069	method_10069
+	m	(I)Lnet/minecraft/util/math/BlockPos;	multiply	method_35830	method_35830
+	m	(Lnet/minecraft/util/math/Direction$Axis;I)Lnet/minecraft/util/math/BlockPos;	offset	method_30513	method_30513
 	m	(DDD)V	<init>	<init>	<init>
 		p	1	x		
 		p	3	y		
@@ -17376,6 +17380,8 @@ c	net/minecraft/nbt/NbtList	tw	net/minecraft/class_2499
 		c	{@return the stringified value at {@code index}, or an empty string if the index\nis out of bounds}\n\n<p>Unlike other getters, this works with any type, not just {@link NbtString}.
 		p	1	index		
 	m	(I)Lnet/minecraft/nbt/NbtElement;	get	k	method_10534
+	m	(ILnet/minecraft/nbt/NbtElement;)V	add	method_10531	method_10531
+	m	(ILnet/minecraft/nbt/NbtElement;)Lnet/minecraft/nbt/NbtElement;	set	method_10606	method_10606
 	m	(Ljava/util/List;B)V	<init>	<init>	<init>
 		p	1	list		
 		p	2	type		
@@ -17383,6 +17389,7 @@ c	net/minecraft/nbt/NbtList	tw	net/minecraft/class_2499
 		p	1	o		
 	m	(I)Ljava/lang/Object;	get	get	get
 		p	1	index		
+	m	(I)Lnet/minecraft/nbt/NbtElement;	remove	method_10536	method_10536
 c	net/minecraft/nbt/NbtList$1	tw$1	net/minecraft/class_2499$1
 	m	(Ljava/io/DataInput;Lnet/minecraft/nbt/NbtSizeTracker;)Lnet/minecraft/nbt/NbtList;	read	a	method_23249
 	m	(Ljava/io/DataInput;Lnet/minecraft/nbt/scanner/NbtScanner;Lnet/minecraft/nbt/NbtSizeTracker;)Lnet/minecraft/nbt/scanner/NbtScanner$Result;	scanList	c	method_53894
@@ -41261,6 +41268,7 @@ c	net/minecraft/util/collection/ArrayListDeque	axm	net/minecraft/class_8623
 		p	1	value		
 	m	(Ljava/lang/Object;)V	addLast	addLast	addLast
 		p	1	value		
+	m	()Lnet/minecraft/util/collection/ListDeque;	reversed	method_59513	method_59513
 c	net/minecraft/util/collection/ArrayListDeque$IteratorImpl	axm$a	net/minecraft/class_8623$class_8624
 	f	Lnet/minecraft/util/collection/ArrayListDeque;	field_45071	a	field_45071
 	f	I	currentIndex	b	field_45072
@@ -41276,6 +41284,7 @@ c	net/minecraft/util/collection/ArrayListDeque$ReversedWrapper	axm$b	net/minecra
 	m	(ILjava/lang/Object;)Ljava/lang/Object;	set	set	set
 		p	1	index		
 		p	2	value		
+	m	()Lnet/minecraft/util/collection/ListDeque;	reversed	method_59513	method_59513
 	m	(Ljava/lang/Object;)Z	offerLast	offerLast	offerLast
 		p	1	value		
 	m	(Ljava/lang/Object;)Z	contains	contains	contains
@@ -58235,6 +58244,7 @@ c	net/minecraft/entity/ai/brain/task/BiasedLongJumpTask	byd	net/minecraft/class_
 		p	2	verticalRange		
 		p	3	horizontalRange		
 		p	4	maxRange		
+	m	(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/mob/MobEntity;J)V	run	method_35082	method_35082
 c	net/minecraft/entity/ai/brain/task/LongJumpTask	bye	net/minecraft/class_6030
 	f	I	MAX_TARGET_SEARCH_TIME	c	field_30135
 	f	I	PATHING_DISTANCE	d	field_30137
@@ -62400,6 +62410,7 @@ c	net/minecraft/entity/passive/AnimalEntity	cgz	net/minecraft/class_1429
 		p	1	stack		
 	m	(I)V	setLoveTicks	r	method_6476
 		p	1	loveTicks		
+	m	()Lnet/minecraft/world/World;	getWorld	method_37908	method_37908
 c	net/minecraft/entity/passive/BeeEntity	cha	net/minecraft/class_4466
 	f	F	field_30271	bY	field_30271
 	f	I	field_28638	bZ	field_28638
@@ -62557,6 +62568,8 @@ c	net/minecraft/entity/passive/BeeEntity$NotAngryGoal	cha$a	net/minecraft/class_
 	f	Lnet/minecraft/entity/passive/BeeEntity;	field_20365	a	field_20365
 	m	()Z	canBeeStart	h	method_21814
 	m	()Z	canBeeContinue	i	method_21815
+	m	()Z	canStart	method_6264	method_6264
+	m	()Z	shouldContinue	method_6266	method_6266
 c	net/minecraft/entity/passive/BeeEntity$StingGoal	cha$b	net/minecraft/class_4466$class_4468
 	f	Lnet/minecraft/entity/passive/BeeEntity;	field_20366	b	field_20366
 	m	(Lnet/minecraft/entity/passive/BeeEntity;Lnet/minecraft/entity/mob/PathAwareEntity;DZ)V	<init>	<init>	<init>
@@ -64277,6 +64290,7 @@ c	net/minecraft/entity/passive/ArmadilloBrain	cij	net/minecraft/class_9071
 	m	(Lnet/minecraft/entity/ai/brain/Brain;)V	addPanicActivities	d	method_55739
 		p	0	brain		
 c	net/minecraft/entity/passive/ArmadilloBrain$1	cij$1	net/minecraft/class_9071$1
+	m	(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/mob/MobEntity;)Z	shouldRun	method_18978	method_18978
 c	net/minecraft/entity/passive/ArmadilloBrain$RollUpTask	cij$a	net/minecraft/class_9071$class_9072
 	f	I	RUN_TIME_IN_TICKS	c	field_49087
 	f	I	field_49088	d	field_49088
@@ -65264,7 +65278,9 @@ c	net/minecraft/entity/passive/SnifferBrain	cjr	net/minecraft/class_8155
 c	net/minecraft/entity/passive/SnifferBrain$1	cjr$1	net/minecraft/class_8155$1
 	m	(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/passive/SnifferEntity;J)V	run	a	method_57004
 c	net/minecraft/entity/passive/SnifferBrain$2	cjr$2	net/minecraft/class_8155$2
+	m	(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/passive/AnimalEntity;J)V	run	method_24544	method_24544
 c	net/minecraft/entity/passive/SnifferBrain$3	cjr$3	net/minecraft/class_8155$3
+	m	(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/mob/PathAwareEntity;J)V	run	method_33197	method_33197
 c	net/minecraft/entity/passive/SnifferBrain$DiggingTask	cjr$a	net/minecraft/class_8155$class_8156
 	m	(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/passive/SnifferEntity;)Z	shouldRun	a	method_49158
 	m	(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/passive/SnifferEntity;J)Z	shouldKeepRunning	a	method_49159
@@ -66953,6 +66969,8 @@ c	net/minecraft/entity/mob/SpellcastingIllagerEntity$CastSpellGoal	cmj$c	net/min
 	m	()Lnet/minecraft/sound/SoundEvent;	getSoundPrepare	l	method_7150
 	m	()Lnet/minecraft/entity/mob/SpellcastingIllagerEntity$Spell;	getSpell	m	method_7147
 	m	()I	getInitialCooldown	n	method_7146
+	m	()V	tick	method_6268	method_6268
+	m	()V	start	method_6269	method_6269
 c	net/minecraft/entity/mob/SpiderEntity	cmk	net/minecraft/class_1628
 	f	Lnet/minecraft/entity/data/TrackedData;	SPIDER_FLAGS	a	field_7403
 		c	The tracked flags of spiders. Only has the {@code 1} bit for {@linkplain\n#isClimbingWall() wall climbing}.
@@ -67343,6 +67361,8 @@ c	net/minecraft/entity/mob/BreezeBrain	cmw	net/minecraft/class_8950
 		p	1	brain		
 		p	0	breeze		
 c	net/minecraft/entity/mob/BreezeBrain$SlideAroundTask	cmw$a	net/minecraft/class_8950$class_8951
+	m	(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/mob/MobEntity;J)V	run	method_18982	method_18982
+	m	(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/mob/MobEntity;J)V	finishRunning	method_18981	method_18981
 c	net/minecraft/entity/ai/brain/task/BreezeMovementUtil	cmx	net/minecraft/class_9075
 	f	D	MAX_MOVE_DISTANCE	a	field_47817
 	m	(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/util/math/random/Random;)Lnet/minecraft/util/math/Vec3d;	getRandomPosBehindTarget	a	method_55751
@@ -79167,6 +79187,8 @@ c	net/minecraft/recipe/MapCloningRecipe	dbc	net/minecraft/class_1855
 c	net/minecraft/recipe/MapExtendingRecipe	dbd	net/minecraft/class_1861
 	m	(Lnet/minecraft/recipe/input/CraftingRecipeInput;)Lnet/minecraft/item/ItemStack;	findFilledMap	c	method_51165
 		p	0	input		
+	m	(Lnet/minecraft/recipe/input/CraftingRecipeInput;Lnet/minecraft/world/World;)Z	matches	method_17728	method_17728
+	m	(Lnet/minecraft/recipe/input/CraftingRecipeInput;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lnet/minecraft/item/ItemStack;	craft	method_17727	method_17727
 	m	(Lnet/minecraft/recipe/book/CraftingRecipeCategory;)V	<init>	<init>	<init>
 		p	1	category		
 c	net/minecraft/recipe/IngredientPlacement	dbe	net/minecraft/class_9887
@@ -94367,6 +94389,7 @@ c	net/minecraft/block/entity/CrafterBlockEntity	duo	net/minecraft/class_8887
 	m	(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V	<init>	<init>	<init>
 		p	2	state		
 		p	1	pos		
+	m	()Lnet/minecraft/util/collection/DefaultedList;	getHeldStacks	method_11282	method_11282
 c	net/minecraft/block/entity/CrafterBlockEntity$1	duo$1	net/minecraft/class_8887$1
 	f	[I	disabledSlots	a	field_46820
 	f	I	triggered	b	field_46821
@@ -133304,6 +133327,9 @@ c	net/minecraft/client/gui/widget/EntryListWidget$Entry	fon$a	net/minecraft/clas
 		p	3	y		
 		p	4	x		
 		p	5	entryWidth		
+	m	(DD)Z	isMouseOver	method_25405	method_25405
+	m	(Z)V	setFocused	method_25365	method_25365
+	m	()Z	isFocused	method_25370	method_25370
 c	net/minecraft/client/gui/widget/EntryListWidget$Entries	fon$b	net/minecraft/class_350$class_352
 	f	Lnet/minecraft/client/gui/widget/EntryListWidget;	field_2145	a	field_2145
 	f	Ljava/util/List;	entries	b	field_2146
@@ -143835,6 +143861,7 @@ c	net/minecraft/client/render/entity/model/PiglinBaseEntityModel	gar	net/minecra
 	m	(Lnet/minecraft/client/model/Dilation;Lnet/minecraft/client/model/ModelData;)Lnet/minecraft/client/model/ModelPartData;	getModelPartData	a	method_62056
 		p	1	playerModelData		
 		p	0	dilation		
+	m	(Lnet/minecraft/client/render/entity/state/BipedEntityRenderState;)V	setAngles	method_17087	method_17087
 c	net/minecraft/client/render/entity/model/AbstractZombieModel	gas	net/minecraft/class_3968
 	m	(Lnet/minecraft/client/render/entity/state/ZombieEntityRenderState;)V	setAngles	a	method_17791
 c	net/minecraft/client/render/entity/model/AllayEntityModel	gat	net/minecraft/class_7308
@@ -143915,6 +143942,7 @@ c	net/minecraft/client/render/entity/model/ArmorStandEntityModel	gay	net/minecra
 	f	Lnet/minecraft/client/model/ModelPart;	shoulderStick	g	field_3313
 	f	Lnet/minecraft/client/model/ModelPart;	basePlate	x	field_3312
 	m	()Lnet/minecraft/client/model/TexturedModelData;	getTexturedModelData	a	method_31979
+	m	(Lnet/minecraft/client/render/entity/state/ArmorStandEntityRenderState;)V	setAngles	method_17066	method_17066
 c	net/minecraft/client/render/entity/model/ArrowEntityModel	gaz	net/minecraft/class_9940
 	m	()Lnet/minecraft/client/model/TexturedModelData;	getTexturedModelData	a	method_62059
 	m	(Lnet/minecraft/client/model/ModelTransform;)Lnet/minecraft/client/model/ModelTransform;	method_62057	a	method_62057
@@ -144223,6 +144251,7 @@ c	net/minecraft/client/render/entity/model/DonkeyEntityModel	gbw	net/minecraft/c
 c	net/minecraft/client/render/entity/model/DrownedEntityModel	gbx	net/minecraft/class_564
 	m	(Lnet/minecraft/client/model/Dilation;)Lnet/minecraft/client/model/TexturedModelData;	getTexturedModelData	a	method_31993
 		p	0	dilation		
+	m	(Lnet/minecraft/client/render/entity/state/ZombieEntityRenderState;)V	setAngles	method_17791	method_17791
 c	net/minecraft/client/render/entity/model/ElytraEntityModel	gby	net/minecraft/class_563
 	c	Represents the model of a worn elytra.\n\n<div class="fabric">\n<table border=1>\n<caption>Model parts of this model</caption>\n<tr>\n  <th>Part Name</th><th>Parent</th><th>Corresponding Field</th>\n</tr>\n<tr>\n  <td>{@value EntityModelPartNames#LEFT_WING}</td><td>Root part</td><td>{@link #leftWing}</td>\n</tr>\n<tr>\n  <td>{@value EntityModelPartNames#RIGHT_WING}</td><td>Root part</td><td>{@link #rightWing}</td>\n</tr>\n</table>\n</div>
 	f	Lnet/minecraft/client/render/entity/model/ModelTransformer;	BABY_TRANSFORMER	a	field_52897
@@ -156104,6 +156133,7 @@ c	net/minecraft/client/render/entity/ZombieBaseEntityRenderer	gqy	net/minecraft/
 c	net/minecraft/client/render/entity/AgeableMobEntityRenderer	gqz	net/minecraft/class_9990
 	f	Lnet/minecraft/client/render/entity/model/EntityModel;	adultModel	a	field_53177
 	f	Lnet/minecraft/client/render/entity/model/EntityModel;	babyModel	b	field_53178
+	m	(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V	render	method_4054	method_4054
 	m	(Lnet/minecraft/client/render/entity/EntityRendererFactory$Context;Lnet/minecraft/client/render/entity/model/EntityModel;Lnet/minecraft/client/render/entity/model/EntityModel;F)V	<init>	<init>	<init>
 		p	3	babyModel		
 		p	2	model		
@@ -156315,8 +156345,10 @@ c	net/minecraft/client/render/entity/DrownedEntityRenderer	grx	net/minecraft/cla
 	m	()Lnet/minecraft/client/render/entity/state/ZombieEntityRenderState;	createRenderState	a	method_62415
 	m	(Lnet/minecraft/entity/mob/DrownedEntity;Lnet/minecraft/util/Arm;)Lnet/minecraft/client/render/entity/model/BipedEntityModel$ArmPose;	getArmPose	a	method_65565
 	m	(Lnet/minecraft/client/render/entity/state/ZombieEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;FF)V	setupTransforms	a	method_4164
+	m	(Lnet/minecraft/client/render/entity/state/ZombieEntityRenderState;)Lnet/minecraft/util/Identifier;	getTexture	method_4163	method_4163
 c	net/minecraft/client/render/entity/ElderGuardianEntityRenderer	gry	net/minecraft/class_893
 	f	Lnet/minecraft/util/Identifier;	TEXTURE	a	field_4665
+	m	(Lnet/minecraft/client/render/entity/state/GuardianEntityRenderState;)Lnet/minecraft/util/Identifier;	getTexture	method_3976	method_3976
 c	net/minecraft/client/render/entity/EndCrystalEntityRenderer	grz	net/minecraft/class_892
 	f	Lnet/minecraft/util/Identifier;	TEXTURE	a	field_4663
 	f	Lnet/minecraft/client/render/RenderLayer;	END_CRYSTAL	b	field_21736
@@ -156821,6 +156853,7 @@ c	net/minecraft/client/render/entity/GiantEntityRenderer	gsq	net/minecraft/class
 c	net/minecraft/client/render/entity/GlowSquidEntityRenderer	gsr	net/minecraft/class_5789
 	f	Lnet/minecraft/util/Identifier;	TEXTURE	a	field_28461
 	m	(Lnet/minecraft/entity/passive/GlowSquidEntity;Lnet/minecraft/util/math/BlockPos;)I	getBlockLight	a	method_33432
+	m	(Lnet/minecraft/client/render/entity/state/SquidEntityRenderState;)Lnet/minecraft/util/Identifier;	getTexture	method_33431	method_33431
 c	net/minecraft/client/render/entity/GoatEntityRenderer	gss	net/minecraft/class_6256
 	f	Lnet/minecraft/util/Identifier;	TEXTURE	a	field_32923
 	m	(Lnet/minecraft/entity/passive/GoatEntity;Lnet/minecraft/client/render/entity/state/GoatEntityRenderState;F)V	updateRenderState	a	method_62452
@@ -156904,6 +156937,7 @@ c	net/minecraft/client/render/entity/BipedEntityRenderer	gsw	net/minecraft/class
 		p	4	scale		
 c	net/minecraft/client/render/entity/HuskEntityRenderer	gsx	net/minecraft/class_912
 	f	Lnet/minecraft/util/Identifier;	TEXTURE	a	field_4716
+	m	(Lnet/minecraft/client/render/entity/state/ZombieEntityRenderState;)Lnet/minecraft/util/Identifier;	getTexture	method_4163	method_4163
 c	net/minecraft/client/render/entity/IllagerEntityRenderer	gsy	net/minecraft/class_3729
 	m	(Lnet/minecraft/entity/mob/IllagerEntity;Lnet/minecraft/client/render/entity/state/IllagerEntityRenderState;F)V	updateRenderState	a	method_62430
 	m	(Lnet/minecraft/client/render/entity/EntityRendererFactory$Context;Lnet/minecraft/client/render/entity/model/IllagerEntityModel;F)V	<init>	<init>	<init>
@@ -157151,6 +157185,7 @@ c	net/minecraft/client/render/entity/MinecartEntityRenderer	gtk	net/minecraft/cl
 	m	()Lnet/minecraft/client/render/entity/state/MinecartEntityRenderState;	createRenderState	a	method_62491
 c	net/minecraft/client/render/entity/MobEntityRenderer	gtl	net/minecraft/class_927
 	m	(Lnet/minecraft/entity/mob/MobEntity;D)Z	hasLabel	a	method_4071
+	m	(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;)F	getShadowRadius	method_55832	method_55832
 c	net/minecraft/client/render/entity/MooshroomEntityRenderer	gtm	net/minecraft/class_926
 	f	Ljava/util/Map;	TEXTURES	a	field_4748
 	m	(Lnet/minecraft/entity/passive/MooshroomEntity;Lnet/minecraft/client/render/entity/state/MooshroomEntityRenderState;F)V	updateRenderState	a	method_62492
