@@ -1,0 +1,52 @@
+{
+  "carvers": [
+  ],
+  "downfall": 0.0,
+  "effects": {
+    "fog_color": 10515120,
+    "mood_sound": {
+      "block_search_extent": 8,
+      "offset": 2.0,
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000
+    },
+    "music": [
+    ],
+    "music_volume": 1.0,
+    "sky_color": 6571400,
+    "water_color": 5472140,
+    "water_fog_color": 532160
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "project:emerald_block",
+      "project:diamond_block"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [
+    ],
+    "axolotls": [],
+    "creature": [
+    ],
+    "misc": [],
+    "monster": [
+    ],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 0.7
+}

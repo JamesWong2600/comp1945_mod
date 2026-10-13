@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "comp1945_project",
+  "version": "1.0-SNAPSHOT",
+  "name": "comp1945_project",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "org.auto.comp1945_project.client.Comp1945_projectDataGenerator"
+    ],
+    "client": [
+      "org.auto.comp1945_project.client.Comp1945_projectClient"
+    ],
+    "main": [
+      "org.auto.comp1945_project.Comp1945_project"
+    ]
+  },
+  "mixins": [
+    "comp1945_project.mixins.json",
+    {
+      "config": "comp1945_project.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "fabric-api": "*",
+    "minecraft": "1.21.4"
+  }
+}
