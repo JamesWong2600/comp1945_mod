@@ -11,6 +11,7 @@ import net.minecraft.network.NetworkSide;
 import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.network.ConnectedClientData;
@@ -20,20 +21,26 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.WorldEvents;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
 
 public class AutoMineController extends ServerPlayerEntity {
 
     private static AutoMineController fakePlayer;
     private static int radius = 16;
     private static int tickCounter = 0;
+    private static boolean enabled = true;
+    private static BlockPos currentTarget = null;
+
 
     // ==================== 建構子 ====================
 
@@ -55,22 +62,51 @@ public class AutoMineController extends ServerPlayerEntity {
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            AutoMineController player = getFakePlayer();
-            if (player == null) return;
-
-            ServerWorld world = player.getServerWorld();
-            BlockPos ore = OreFinder.findNearestOre(world, player.getPos(), radius);
-            if (ore != null) {
-                double distanceSq = player.getPos().squaredDistanceTo(ore.getX() + 0.5, ore.getY(), ore.getZ() + 0.5);
-
-                // 如果距離太遠，直接朝礦石方向移動
-                if (distanceSq > 9.0) {
-                    player.moveTowards(ore);
-                } else {
-                    player.lookAtOre(ore);
-                    player.breakBlockAt(ore);
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                if (player.getWorld() instanceof ServerWorld world) {
+                    MiningRecordManager.tickAnsKey(world, player.getX(), player.getY(), player.getZ());
                 }
             }
+            MiningRecordManager.tickFlush();
+
+            // 2. 假玩家邏輯
+            if (!enabled) return;
+            AutoMineController fake = getFakePlayer();
+            if (fake == null) return;
+
+            ServerWorld world = fake.getServerWorld();
+
+            if (currentTarget == null || world.getBlockState(currentTarget).isAir()) {
+                currentTarget = OreFinder.findNearestOre(world, fake.getPos(), radius);
+            }
+
+            if (currentTarget != null) {
+                double dist = fake.getPos().distanceTo(Vec3d.ofCenter(currentTarget));
+                if (dist > 4.0) {
+                    fake.moveTowards(currentTarget);
+                } else {
+                    fake.breakBlockAt(currentTarget);
+                    currentTarget = null;
+                }
+            }
+
+            // 🔥 更新假玩家的座標 / biome / tick
+            BlockPos pos = fake.getBlockPos();
+            String coordStr = pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
+            String biomeStr = world.getBiome(pos).getKey()
+                    .map(key -> key.getValue().toString())
+                    .orElse("minecraft:plains");
+            long tick = world.getTime();
+            BiomeGuessHUD.updateStatus(coordStr, biomeStr, tick);
+
+            // 🔥 每 100 tick 訓練一次
+            if (server.getTicks() % 100 == 0) {
+                HMMBiomeTrainer.trainAsync();
+            }
+
+            // 🔥 更新預測
+            Map<String, Double> probs = HMMBiomeTrainer.predict(fake.getUuid());
+            BiomeGuessHUD.updatePredictions(probs);
         });
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
@@ -120,6 +156,36 @@ public class AutoMineController extends ServerPlayerEntity {
                                                 return 1;
                                             })
                                     )
+                            ).then(CommandManager.literal("train")
+                                    .executes(context -> {
+                                        BiomePredictor.Model model = BiomeTrainer.train();   // ← 這裡呼叫
+                                        if (model == null) {
+                                            context.getSource().sendError(Text.literal("訓練失敗，資料不足"));
+                                            return 0;
+                                        }
+                                        BiomePredictor.load();   // ← 這裡呼叫
+                                        context.getSource().sendFeedback(
+                                                () -> Text.literal("模型訓練完成"),
+                                                false
+                                        );
+                                        return 1;
+                                    })
+                            ).then(CommandManager.literal("predict")
+                                    .executes(context -> {
+                                        if (!BiomePredictor.isLoaded()) {   // ← 這裡呼叫
+                                            context.getSource().sendError(Text.literal("模型尚未載入，請先 /fakemine train"));
+                                            return 0;
+                                        }
+
+                                        Map<String, Integer> oreCounts = SessionStats.get(context.getSource().getPlayer().getUuid());
+                                        Map<String, Double> probs = BiomePredictor.predict(oreCounts);   // ← 這裡呼叫
+
+                                        for (Map.Entry<String, Double> e : probs.entrySet()) {
+                                            String line = e.getKey() + ": " + String.format("%.2f%%", e.getValue() * 100);
+                                            context.getSource().sendFeedback(() -> Text.literal(line), false);
+                                        }
+                                        return 1;
+                                    })
                             )
             );
         });
@@ -221,6 +287,21 @@ public class AutoMineController extends ServerPlayerEntity {
         BlockState state = world.getBlockState(pos);
         if (state.isAir()) return;
 
+        String oreId = Registries.BLOCK.getId(state.getBlock()).toString();
+        System.out.println("[AutoMine] 挖到方塊: " + oreId);
+
+        String biomeId = world.getBiome(pos).getKey()
+                .map(key -> key.getValue().toString())
+                .orElse("minecraft:plains");
+
+        BiomeTrainerLive.onBlockBreak(oreId, biomeId);
+
+        HMMBiomeTrainer.onBlockBreak(this.getUuid(), oreId);
+
+
+        MiningRecordManager.recordBlockBreak(world, pos, state);
+        Identifier blockId = Registries.BLOCK.getId(state.getBlock());
+        BiomeGuessHUD.updateLastBrokenBlock(blockId.toString());
         this.getAbilities().allowModifyWorld = true;
 
         SoundEvent breakSound = state.getSoundGroup().getBreakSound();
@@ -262,6 +343,10 @@ public class AutoMineController extends ServerPlayerEntity {
     public void remove(RemovalReason reason) {
         if (this.getServer() != null) {
             this.getServer().getPlayerManager().getPlayerList().remove(this);
+        }
+        if (fakePlayer == this) {
+            fakePlayer = null;
+            currentTarget = null;   // 🔥 加這行
         }
         super.remove(reason);
     }
